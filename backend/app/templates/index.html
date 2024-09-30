@@ -1,23 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>COM4930 RE Image Labeler</title>
-    <!-- Tailwind CSS CDN -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
-      rel="stylesheet"
-    />
-  </head>
-  <body class="bg-gray-100 flex items-center justify-center min-h-screen">
-    <div class="max-w-md w-full bg-white p-6 rounded-lg shadow-md">
-      <h1 class="text-2xl font-bold mb-4 text-center">
-        Welcome to Flask with Tailwind CSS
-      </h1>
-      <p class="text-gray-700 text-center">
-        This is a boilerplate HTML template using Tailwind CSS.
-      </p>
-    </div>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>COM4930 RE Image Labeler</title>
+  <!-- Tailwind CSS CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+  <div class="max-w-md w-full bg-white p-6 rounded-lg shadow-md">
+    <h1 class="text-2xl font-bold mb-4 text-center hidden">
+      Welcome to Flask with Tailwind CSS
+    </h1>
+    <h1 class="text-2xl font-bold text-center mb-8">
+      Image Labeling System
+    </h1>
+
+    <p class="text-gray-700 text-center hidden">
+      This is a boilerplate HTML template using Tailwind CSS.
+    </p>
+
+    <button id="fetchImage"
+      class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none transition duration-300 text-center">
+      Fetch Image
+    </button>
+  </div>
+  <div id="imageContainer" class="mt-8">
+    <img id="image" src="" alt="Image will appear here" class="w-96 h-auto rounded-lg shadow-lg hidden" />
+  </div>
+  <div id="labelContainer" class="mt-8 hidden">
+    <h3 class="text-lg font-medium text-gray-700 mb-4">Select a Label for the Image</h3>
+    <form id="labelForm" class="flex flex-col space-y-4 items-center">
+      <select id="labelSelect"
+        class="w-full max-w-xs px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        <option value="Exterior">Exterior</option>
+        <option value="Bathroom">Bathroom</option>
+        <option value="Bedroom">Bedroom</option>
+        <option value="Kitchen">Kitchen</option>
+        <option value="Living Room">Living Room</option>
+        <option value="Basement">Basement</option>
+        <option value="Attic">Attic</option>
+        <option value="Garage">Garage</option>
+        <option value="Other">Other</option>
+      </select>
+
+      <button type="submit"
+        class="px-6 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 focus:outline-none transition duration-300">
+        Submit Label
+      </button>
+    </form>
+  </div>
+  <script>
+    let image_id;
+    // Fetch image when button is clicked
+    document.getElementById('fetchImage').addEventListener('click', function () {
+      axios.get('/get_image')
+        .then(function (response) {
+          const imageUrl = response.data.image_url;
+          imageId = response.data.image_id;  // Store the image ID
+
+          // Display the fetched image
+          const imgElement = document.getElementById('image');
+          imgElement.src = imageUrl;
+          imgElement.classList.remove('hidden');
+
+          // Show the label form
+          document.getElementById('labelContainer').classList.remove('hidden');
+        })
+        .catch(function (error) {
+          console.error('Error fetching image:', error);
+        });
+    });
+
+    // Handle the form submission for the label
+    document.getElementById('labelForm').addEventListener('submit', function (event) {
+      event.preventDefault();  // Prevent default form submission
+
+      // Get the selected label from the dropdown
+      const selectedLabel = document.getElementById('labelSelect').value;
+
+      // Send a POST request with image_id and label
+      axios.post('/update_label', {
+        image_id: imageId,
+        label: selectedLabel
+      })
+        .then(function (response) {
+          alert('Label submitted: ' + JSON.stringify(response.data));
+        })
+        .catch(function (error) {
+          console.error('Error submitting label:', error);
+        });
+    });
+  </script>
+</body>
+
 </html>
