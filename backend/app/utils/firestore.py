@@ -32,7 +32,7 @@ class FirestoreUtils:
         query = query.order_by("__name__")
 
         # Get a random starting point by generating a random letter
-        random_char = chr(random.randint(65, 90))  # Random uppercase letter
+        random_char = chr(random.randint(48, 57))  # Random number
         query = query.start_at({"__name__": random_char}).limit(1)
 
         docs = list(query.stream())
