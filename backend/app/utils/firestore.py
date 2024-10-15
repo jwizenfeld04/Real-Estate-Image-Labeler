@@ -1,7 +1,7 @@
 import os
 import random
-from typing import Optional, Dict, Any, List
-from datetime import timedelta, datetime
+from typing import Optional, Dict, Any
+from datetime import timedelta
 from google.cloud import firestore, storage
 
 
@@ -16,7 +16,6 @@ class FirestoreUtils:
     def get_random_unlabeled_image(
         self, is_score: bool = False
     ) -> Optional[Dict[str, str]]:
-        """Fetch a random unlabeled image from Firestore."""
         collection_ref = self.db.collection("labels")
 
         if is_score:
@@ -28,17 +27,19 @@ class FirestoreUtils:
                 filter=firestore.FieldFilter("room_type_served", "==", False)
             )
 
-        # Add ordering by __name__ to ensure consistency
         query = query.order_by("__name__")
 
-        # Get a random starting point by generating a random letter
         random_char = chr(random.randint(48, 57))  # Random number
         query = query.start_at({"__name__": random_char}).limit(1)
 
         docs = list(query.stream())
 
+        # Handles case where there is no more images to label with the number
         if not docs:
-            return None
+            query = query.start_at({}).limit(1)
+            docs = list(query.stream())
+            if not docs:
+                return None
 
         doc = docs[0]
         selected_image_id = doc.id
@@ -53,7 +54,6 @@ class FirestoreUtils:
         return {"id": selected_image_id, "url": url}
 
     def label_room_type(self, image_path: str, room_type: str, user_id: str) -> str:
-        """Label room type for a given image in Firestore."""
         doc_ref = self.db.collection("labels").document(image_path)
 
         try:
@@ -69,7 +69,7 @@ class FirestoreUtils:
                 {
                     "room_type": room_type,
                     "room_type_labeled": True,
-                    "room_type_timestamp": datetime.utcnow().isoformat(),
+                    "room_type_timestamp": firestore.SERVER_TIMESTAMP,
                     "room_type_labeled_user_id": user_id,
                 }
             )
@@ -80,7 +80,6 @@ class FirestoreUtils:
     def label_score(
         self, image_path: str, score: int, other_labels: Dict[str, Any], user_id: str
     ) -> str:
-        """Update the score and other labels for a given image in Firestore."""
         doc_ref = self.db.collection("labels").document(image_path)
 
         try:
@@ -113,13 +112,10 @@ class FirestoreUtils:
             return f"Error updating score: {str(e)}"
 
     def get_image_id_from_path(self, image_path: str) -> str:
-        """Extract image ID from the image path."""
         image_id_parts = image_path.split("/")
         return f"{image_id_parts[2]}_{image_id_parts[3]}"
 
     def get_path_from_image_id(self, image_id: str) -> str:
-        """Convert image ID back to the original path format."""
-        # Find the index where "pic" starts
         pic_index = image_id.find("pic")
 
         if pic_index == -1:
@@ -133,12 +129,26 @@ class FirestoreUtils:
 
         return f"{self.storage_prefix}/{address}/{filename}"
 
+    def reset_room_type_served(self) -> str:
+        try:
+            # Query for all documents where room_type_served is True and room_type_labeled is False
+            query = (
+                self.db.collection("labels")
+                .where(filter=firestore.FieldFilter("room_type_served", "==", True))
+                .where(filter=firestore.FieldFilter("room_type_labeled", "==", False))
+            )
+            docs = list(query.stream())
 
-def main():
-    """Main function to handle the resync of images."""
-    firestore_utils = FirestoreUtils()
-    print(firestore_utils.get_random_unlabeled_image(is_score=False))
+            if not docs:
+                return "No served documents need to be reset."
 
+            batch = self.db.batch()  # Create a Firestore batch for efficient updates
+            for doc in docs:
+                doc_ref = doc.reference
+                batch.update(doc_ref, {"room_type_served": False})
 
-if __name__ == "__main__":
-    main()
+            batch.commit()
+
+            return f"Successfully updated {len(docs)} documents to reset 'room_type_served'."
+        except Exception as e:
+            return f"Error resetting 'room_type_served': {str(e)}"
