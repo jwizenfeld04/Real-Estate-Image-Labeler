@@ -1,10 +1,8 @@
 import os
 import random
-from typing import Optional, Dict, Any, List
-from datetime import timedelta, datetime
+from typing import Optional, Dict, Any
+from datetime import timedelta
 from google.cloud import firestore, storage
-
-# To run main go to the root directory and run python -m backend.app.utils.firestore
 
 
 class FirestoreUtils:
@@ -13,39 +11,54 @@ class FirestoreUtils:
         self.db = firestore.Client()
         self.stg = storage.Client()
         self.bucket_name = os.environ.get("FIREBASE_STORAGE_BUCKET")
-        self.storage_prefix = "images/columbus-sold/"
-        self.unlabeled_room_type_cache: List[str] = []
-        self.unlabeled_image_cache: List[str] = []
+        self.storage_prefix = "images/columbus-sold"
 
-    def get_random_unlabeled_image(self) -> Optional[Dict[str, str]]:
-        """Fetch a random unlabeled image from the cached IDs."""
-        if not self.unlabeled_image_cache:
-            self.__refresh_image_cache()
+    def get_random_unlabeled_image(
+        self, is_score: bool = False
+    ) -> Optional[Dict[str, str]]:
+        collection_ref = self.db.collection("labels")
 
-        if not self.unlabeled_image_cache:
-            return None
+        if is_score:
+            query = collection_ref.where(
+                filter=firestore.FieldFilter("total_label_count", "<", 10)
+            )
+        else:
+            query = collection_ref.where(
+                filter=firestore.FieldFilter("room_type_served", "==", False)
+            )
 
-        selected_image_id = random.choice(self.unlabeled_image_cache)
+        query = query.order_by("__name__")
+
+        random_char = chr(random.randint(48, 57))  # Random number
+        query = query.start_at({"__name__": random_char}).limit(1)
+
+        docs = list(query.stream())
+
+        # Handles case where there is no more images to label with the number
+        if not docs:
+            query = query.start_at({}).limit(1)
+            docs = list(query.stream())
+            if not docs:
+                return None
+
+        doc = docs[0]
+        selected_image_id = doc.id
+
         bucket = self.stg.bucket(self.bucket_name)
-        blob = bucket.blob(selected_image_id)
+        blob = bucket.blob(self.get_path_from_image_id(selected_image_id))
         url = blob.generate_signed_url(expiration=timedelta(hours=1))
 
-        self.db.collection("labels").document(selected_image_id).update(
-            {"room_type_served": True}
-        )
-        self.unlabeled_image_cache.remove(selected_image_id)
+        if not is_score:
+            doc.reference.update({"room_type_served": True})
 
         return {"id": selected_image_id, "url": url}
 
     def label_room_type(self, image_path: str, room_type: str, user_id: str) -> str:
-        """Label room type for a given image in Firestore."""
-        doc_ref = self.db.collection("labels").document(
-            self._get_image_id_from_path(image_path)
-        )
+        doc_ref = self.db.collection("labels").document(image_path)
 
         try:
             doc = doc_ref.get()
-            if not doc.exists:
+            if not doc.exists():
                 return "Image document not found."
 
             doc_data = doc.to_dict()
@@ -56,14 +69,10 @@ class FirestoreUtils:
                 {
                     "room_type": room_type,
                     "room_type_labeled": True,
-                    "room_type_served": False,
-                    "room_type_timestamp": datetime.utcnow().isoformat(),
+                    "room_type_timestamp": firestore.SERVER_TIMESTAMP,
                     "room_type_labeled_user_id": user_id,
                 }
             )
-
-            self.unlabeled_image_cache.remove(self.get_image_id_from_path(image_path))
-
             return f"Room type '{room_type}' for image '{image_path}' updated successfully."
         except Exception as e:
             return f"Error updating room type: {str(e)}"
@@ -71,14 +80,11 @@ class FirestoreUtils:
     def label_score(
         self, image_path: str, score: int, other_labels: Dict[str, Any], user_id: str
     ) -> str:
-        """Update the score and other labels for a given image in Firestore."""
-        doc_ref = self.db.collection("labels").document(
-            self._get_image_id_from_path(image_path)
-        )
+        doc_ref = self.db.collection("labels").document(image_path)
 
         try:
             doc = doc_ref.get()
-            if not doc.exists:
+            if not doc.exists():
                 return "Image document not found."
 
             doc_data = doc.to_dict()
@@ -101,111 +107,48 @@ class FirestoreUtils:
                     "score_served": firestore.Increment(1),
                 }
             )
-
             return f"Score of {score} added for image '{image_path}' successfully."
         except Exception as e:
             return f"Error updating score: {str(e)}"
 
-    def __sync_images_from_bucket(self):
-        """Sync new images from Google Cloud Storage to Firestore."""
-        existing_image_ids = self.__get_existing_image_ids()
-        blobs = self.__get_blobs_from_prefix()
-
-        batch = self.db.batch()
-        batch_size = 0
-        max_batch_size = 500
-
-        for blob in blobs:
-            image_path = blob.name
-            image_id = self.get_image_id_from_path(image_path)
-
-            if image_id in existing_image_ids:
-                continue
-
-            doc_ref = self.db.collection("labels").document(image_id)
-            doc_data = self.create_initial_doc_data(image_path)
-
-            batch.set(doc_ref, doc_data)
-            batch_size += 1
-
-            if batch_size >= max_batch_size:
-                batch.commit()
-                batch = self.db.batch()
-                batch_size = 0
-
-        if batch_size > 0:
-            batch.commit()
-
-    def __refresh_image_cache(self):
-        """Refresh the cache of unlabeled image IDs."""
-        self.unlabeled_image_cache = [
-            doc
-            for doc in self.db.collection("labels")
-            .where("room_type_labeled", "==", False)
-            .stream()
-        ]
-
-    def __get_blobs_from_prefix(self):
-        """Retrieve all blobs from a specific prefix in the storage bucket."""
-        bucket = self.stg.bucket(self.bucket_name)
-        return bucket.list_blobs(prefix=self.storage_prefix)
-
-    def __get_existing_image_ids(self) -> set:
-        """Fetch all existing image document IDs in Firestore."""
-        return set(doc.id for doc in self.db.collection("labels").stream())
-
     def get_image_id_from_path(self, image_path: str) -> str:
-        """Extract image ID from the image path."""
         image_id_parts = image_path.split("/")
         return f"{image_id_parts[2]}_{image_id_parts[3]}"
 
     def get_path_from_image_id(self, image_id: str) -> str:
-        """Reconstruct image path from image ID"""
-        path = self.storage_prefix
-        parts = image_id.split("_")
-        pic_index = next(
-            (i for i, part in enumerate(parts) if part.startswith("pic")), None
-        )
+        pic_index = image_id.find("pic")
 
-        if pic_index is None:
-            raise ValueError("Invalid image_id format: 'pic' not found")
+        if pic_index == -1:
+            raise ValueError("Invalid image ID format: 'pic' not found in the image ID")
 
-        property_address = "_".join(parts[:pic_index])
-        image_number = parts[pic_index].replace("pic", "")
-        return path + property_address + "/" + image_number
+        # Split the image_id into address and filename
+        address = image_id[:pic_index].rstrip(
+            "_"
+        )  # Remove trailing underscore if present
+        filename = image_id[pic_index:]
 
-    @staticmethod
-    def create_initial_doc_data(image_path: str) -> Dict[str, Any]:
-        """Create initial document data for a new image."""
-        image_id_parts = image_path.split("/")
-        return {
-            # General ifno
-            "property_address": image_id_parts[2],
-            "image_path": image_path,
-            "location": image_id_parts[1],
-            "labeled": False,
-            # Label 1: Room Type
-            "room_type": None,
-            "room_type_served": False,
-            "room_type_labeled": False,
-            "room_type_timestamp": None,
-            "room_type_labeled_user_id": None,
-            # Label 2: Scores
-            "scores": [],
-            "average_score": None,
-            "other_labels": [],
-            "score_served": 0,
-            "total_label_count": 0,
-            "score_labeled_user_ids": [],
-        }
+        return f"{self.storage_prefix}/{address}/{filename}"
 
+    def reset_room_type_served(self) -> str:
+        try:
+            # Query for all documents where room_type_served is True and room_type_labeled is False
+            query = (
+                self.db.collection("labels")
+                .where(filter=firestore.FieldFilter("room_type_served", "==", True))
+                .where(filter=firestore.FieldFilter("room_type_labeled", "==", False))
+            )
+            docs = list(query.stream())
 
-def main():
-    """Main function to handle the resync of images."""
-    firestore_utils = FirestoreUtils()
-    firestore_utils.__refresh_image_cache()
-    firestore_utils.__sync_images_from_bucket()
+            if not docs:
+                return "No served documents need to be reset."
 
+            batch = self.db.batch()  # Create a Firestore batch for efficient updates
+            for doc in docs:
+                doc_ref = doc.reference
+                batch.update(doc_ref, {"room_type_served": False})
 
-if __name__ == "__main__":
-    main()
+            batch.commit()
+
+            return f"Successfully updated {len(docs)} documents to reset 'room_type_served'."
+        except Exception as e:
+            return f"Error resetting 'room_type_served': {str(e)}"
