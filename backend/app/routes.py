@@ -76,8 +76,8 @@ def start_session():
 def update_label():
     try:
         data = request.get_json()
-        label = data.get("label")
         image_path = data.get("image_path")
+        label = data.get("label")
         user_id = data.get("user_id")
         # session_id = data.get('session_id') figure out how to do this
 
