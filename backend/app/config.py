@@ -12,10 +12,9 @@ class Config:
 
         # Read environment variables
         self.FLASK_SECRET_KEY = os.environ.get("FLASK_SECRET_KEY")
-        if self.APP_ENV == "local":
-            self.GOOGLE_APPLICATION_CREDENTIALS = os.environ.get(
-                "GOOGLE_APPLICATION_CREDENTIALS"
-            )
+        self.GOOGLE_APPLICATION_CREDENTIALS = os.environ.get(
+            "GOOGLE_APPLICATION_CREDENTIALS"
+        )
         self.GOOGLE_CLOUD_PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT_ID")
         self.FIRESTORE_COLLECTION_NAME = os.environ.get("FIRESTORE_COLLECTION_NAME")
         self.FIREBASE_STORAGE_BUCKET = os.environ.get("FIREBASE_STORAGE_BUCKET")
