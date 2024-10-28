@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, jsonify
-from firestore import FirestoreUtils
+from .firestore import FirestoreUtils
 
 main = Blueprint("main", __name__)
 
