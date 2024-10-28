@@ -1,0 +1,32 @@
+# Ignore Python cache and compiled files
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+
+# Ignore virtual environment folder
+venv/
+
+# Ignore test files and folders
+tests/
+*.pytest_cache/
+*.coverage
+
+# Ignore .env files for security
+.env
+
+# Ignore Git files
+.git
+.gitignore
+
+# Ignore system files
+.DS_Store
+
+# Ignore IDE/editor config files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Ignore unnecessary cache and temporary files
+*.log
+*.tmp
