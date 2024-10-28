@@ -1,5 +1,5 @@
-from flask import Blueprint, render_template, Flask, request, jsonify
-from firestore import FirestoreUtils 
+from flask import Blueprint, render_template, request, jsonify
+from firestore import FirestoreUtils
 
 main = Blueprint("main", __name__)
 
@@ -9,8 +9,7 @@ def home():
     return render_template("index.html")
 
 
-
-@main.route('/get_image', methods=['GET'])
+@main.route("/get_image", methods=["GET"])
 def get_image():
     try:
         firestore_utils = FirestoreUtils()
@@ -18,22 +17,27 @@ def get_image():
         if image_data:
             return jsonify({"success": True, "image": image_data}), 200
         else:
-            return jsonify({"success": False, "message": "No unlabeled images available"}), 404
+            return (
+                jsonify({"success": False, "message": "No unlabeled images available"}),
+                404,
+            )
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-@main.route('/start_session', methods=['POST']) # username and session_type should be the variables in the request
+@main.route(
+    "/start_session", methods=["POST"]
+)  # username and session_type should be the variables in the request
 def start_session():
     # try:
     #     # parse the request data
-    #     data = request.get_json() 
+    #     data = request.get_json()
     #     username = data.get('username')
     #     session_type = data.get('session_type')
 
     #     if not username or not session_type:
     #         return jsonify({"success": False, "message": "Missing username or session type"}), 400
-        
+
     #     firestore_utils = FirestoreUtils()
 
     #     # create session data
@@ -58,7 +62,7 @@ def start_session():
     Initialize a new user session with a username and session type (room labeling or score labeling).
 
     Functionality:
-    - Store session information in Firestore, including `username`, `session type`, 
+    - Store session information in Firestore, including `username`, `session type`,
     and the timestamp when the session starts.
     - Track which images have been labeled in the session based on the `image_path` or ID.
 
@@ -68,24 +72,29 @@ def start_session():
     pass  # Implementation here
 
 
-@main.route('/update_label', methods=['POST'])
+@main.route("/update_label", methods=["POST"])
 def update_label():
     try:
         data = request.get_json()
-        label = data.get('label')
-        image_path = data.get('image_path')
-        user_id = data.get('user_id')
-        #session_id = data.get('session_id') figure out how to do this
-        
+        label = data.get("label")
+        image_path = data.get("image_path")
+        user_id = data.get("user_id")
+        # session_id = data.get('session_id') figure out how to do this
+
         firestore_utils = FirestoreUtils()
 
         if label:
             result = firestore_utils.label_room_type(image_path, label, user_id)
         # update score if provided
-        #elif score:
+        # elif score:
         #    result = firestore_utils.label_score(image_path, score, data.get('other_labels', {}), user_id)
         else:
-            return jsonify({"success": False, "message": "Room type or score must be provided"}), 400
+            return (
+                jsonify(
+                    {"success": False, "message": "Room type or score must be provided"}
+                ),
+                400,
+            )
 
         # if "successfully" in result:
         #     # increment session score if successful
@@ -97,7 +106,7 @@ def update_label():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-@main.route('/reset_image_served', methods=['GET'])
+@main.route("/reset_image_served", methods=["GET"])
 def reset_image_served():
     """
     Reset any images that have been served but not labeled after a defined time period (stale images).
@@ -107,13 +116,13 @@ def reset_image_served():
     - Reset `served = False` for these images, allowing them to be re-served to new users.
 
     Scheduler:
-    - This endpoint should run periodically using a cloud scheduler (e.g., Cloud Scheduler) 
+    - This endpoint should run periodically using a cloud scheduler (e.g., Cloud Scheduler)
     to prevent stale images.
     """
-    pass  
+    pass
 
 
-@main.route('/get_leaderboard', methods=['GET'])
+@main.route("/get_leaderboard", methods=["GET"])
 def get_leaderboard():
     """
     Retrieve a leaderboard of user session scores, sorted by the number of labeled images.
@@ -125,21 +134,26 @@ def get_leaderboard():
     pass  # Implementation here
 
 
-@main.route('/skip_image', methods=['POST'])
+@main.route("/skip_image", methods=["POST"])
 def skip_image():
     try:
         data = request.get_json()
-        image_id = data.get('image_id')
-        session_id = data.get('session_id')
+        image_id = data.get("image_id")
+        session_id = data.get("session_id")
 
         if not image_id or not session_id:
-            return jsonify({"success": False, "message": "Missing required parameters"}), 400
+            return (
+                jsonify({"success": False, "message": "Missing required parameters"}),
+                400,
+            )
 
         firestore_utils = FirestoreUtils()
         result = firestore_utils.reset_image_served(image_id)  # NOT IMPLEMENTED YET
 
         if result:
-            return jsonify({"success": True, "message": "Image skipped and served status reset"})
+            return jsonify(
+                {"success": True, "message": "Image skipped and served status reset"}
+            )
         else:
             return jsonify({"success": False, "message": "Error skipping image"}), 400
 
