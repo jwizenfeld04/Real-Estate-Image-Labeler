@@ -84,7 +84,8 @@ def update_label():
         firestore_utils = FirestoreUtils()
 
         if label:
-            result = firestore_utils.label_room_type(image_path, label, user_id)
+            firestore_utils.label_room_type(image_path, label, user_id)
+            return jsonify({"success": True})
         # update score if provided
         # elif score:
         #    result = firestore_utils.label_score(image_path, score, data.get('other_labels', {}), user_id)

@@ -58,11 +58,12 @@ class FirestoreUtils:
 
         try:
             doc = doc_ref.get()
-            if not doc.exists():
+            if not doc.exists:  # Changed from doc.exists() to doc.exists
                 return "Image document not found."
 
             doc_data = doc.to_dict()
-            if doc_data.get("room_type_labeled"):
+            # Check if room_type_labeled exists and is True
+            if doc_data and doc_data.get("room_type_labeled", False):
                 return "Room type has already been labeled."
 
             doc_ref.update(
@@ -75,6 +76,7 @@ class FirestoreUtils:
             )
             return f"Room type '{room_type}' for image '{image_path}' updated successfully."
         except Exception as e:
+            print(str(e))
             return f"Error updating room type: {str(e)}"
 
     def label_score(
