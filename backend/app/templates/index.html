@@ -14,12 +14,12 @@
   >
     <h1 class="text-3xl font-bold text-gray-800 mb-8">Image Labeling System</h1>
 
-    <!-- Button to fetch the image -->
+    <!-- Skip Button -->
     <button
-      id="fetchImage"
-      class="absolute z-10 px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none transition duration-300 top-0 left-1/2 transform -translate-x-1/2"
+      id="skipImage"
+      class="absolute z-10 px-6 py-2 bg-yellow-600 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-700 focus:outline-none transition duration-300 top-0 right-1/2 transform translate-x-1/2"
     >
-      Fetch Image
+      Skip Image
     </button>
 
     <div class="absolute left-0 top-0 mt-12 ml-8 w-48 bg-white p-4 rounded-lg shadow-md">
@@ -78,20 +78,18 @@
     </div>
 
     <script>
-      let imageId; // To store the image ID after fetching
+      let imageId;
+      let currentSessionId;
 
-      function getSessionId() {
-        // Split all cookies into an array
-        const cookies = document.cookie.split(";");
-        // Find the session cookie
-        const sessionCookie = cookies.find((cookie) =>
-          cookie.trim().startsWith("session=")
-        );
-        if (sessionCookie) {
-          // Return the session value
-          return sessionCookie.split("=")[1].trim();
+      async function fetchSessionId() {
+        try {
+          const response = await axios.get("/get_session_id");
+          currentSessionId = response.data.session_id;
+          return currentSessionId;
+        } catch (error) {
+          console.error("Error fetching session ID:", error);
+          return null;
         }
-        return null;
       }
 
       // Function to fetch an image
@@ -99,20 +97,16 @@
         axios
           .get("/get_image")
           .then(function (response) {
-            // Check if the request was successful
             if (response.data.success) {
               const imageData = response.data.image;
-              imageId = imageData.id; // Store the image ID
+              imageId = imageData.id;
 
-              // Display the fetched image
               const imgElement = document.getElementById("image");
               imgElement.src = imageData.url;
               imgElement.classList.remove("hidden");
 
-              // Show the label form
               document.getElementById("labelContainer").classList.remove("hidden");
             } else {
-              // Handle case when no images are available
               console.error("No images available:", response.data.message);
               alert("No more images to label");
             }
@@ -123,44 +117,71 @@
           });
       }
 
-      // Initial fetch image button click handler
-      document.getElementById("fetchImage").addEventListener("click", function () {
-        fetchImage();
+      // Function to skip the current image
+      function skipImage() {
+        axios
+          .post("/skip_image", { image_id: imageId, session_id: currentSessionId })
+          .then((response) => {
+            if (response.data.success) {
+              console.log("Image skipped successfully");
+              fetchImage();
+            } else {
+              console.error("Error skipping image:", response.data.message);
+              alert("Error skipping image. Please try again.");
+            }
+          })
+          .catch((error) => {
+            console.error("Error skipping image:", error);
+            alert("Error skipping image. Please try again.");
+          });
+      }
+
+      // Skip button click event
+      document.getElementById("skipImage").addEventListener("click", function () {
+        skipImage();
       });
 
       // Handle the form submission for the label
-      document.getElementById("labelForm").addEventListener("submit", function (event) {
-        event.preventDefault(); // Prevent default form submission
+      document
+        .getElementById("labelForm")
+        .addEventListener("submit", async function (event) {
+          event.preventDefault();
 
-        if (!imageId) {
-          alert("No image loaded. Please fetch an image first.");
-          return;
-        }
+          if (!imageId) {
+            alert("No image loaded. Please fetch an image first.");
+            return;
+          }
 
-        // Get the selected label from the dropdown
-        const selectedLabel = document.getElementById("labelSelect").value;
+          if (!currentSessionId) {
+            currentSessionId = await fetchSessionId();
+          }
 
-        // Send a POST request with image_id and label
-        axios
-          .post("/update_label", {
-            image_path: imageId,
-            label: selectedLabel,
-            user_id: getSessionId(),
-          })
-          .then(function (response) {
-            if (response.data.success) {
-              console.log("Label submitted successfully");
-              // Fetch a new image after successful submission
-              fetchImage();
-            } else {
-              alert("Error submitting label: " + response.data.message);
-            }
-          })
-          .catch(function (error) {
-            console.error("Error submitting label:", error);
-            alert("Error submitting label. Please try again.");
-          });
-      });
+          if (!currentSessionId) {
+            alert("No session ID found. Please log in again.");
+            return;
+          }
+
+          const selectedLabel = document.getElementById("labelSelect").value;
+
+          axios
+            .post("/update_label", {
+              image_path: imageId,
+              label: selectedLabel,
+              user_id: currentSessionId,
+            })
+            .then(function (response) {
+              if (response.data.success) {
+                console.log("Label submitted successfully");
+                fetchImage();
+              } else {
+                alert("Error submitting label: " + response.data.message);
+              }
+            })
+            .catch(function (error) {
+              console.error("Error submitting label:", error);
+              alert("Error submitting label. Please try again.");
+            });
+        });
 
       // Add keyboard shortcuts for form submission
       const keyLabelMap = {
@@ -177,18 +198,19 @@
 
       document.addEventListener("keydown", function (event) {
         if (event.key === "Enter") {
-          // Simulate form submission when "Enter" is pressed
           event.preventDefault();
           document.getElementById("labelForm").dispatchEvent(new Event("submit"));
         }
         const label = keyLabelMap[event.key.toLowerCase()];
         if (label) {
-          event.preventDefault(); // Prevent default behavior
-          document.getElementById("labelSelect").value = label; // Set the corresponding label
-          // Automatically submit the form when a keyboard shortcut is used
+          event.preventDefault();
+          document.getElementById("labelSelect").value = label;
           document.getElementById("labelForm").dispatchEvent(new Event("submit"));
         }
       });
+
+      // Fetch session ID and image when page loads
+      fetchSessionId().then(fetchImage);
     </script>
   </body>
 </html>

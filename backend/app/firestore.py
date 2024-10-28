@@ -154,3 +154,26 @@ class FirestoreUtils:
             return f"Successfully updated {len(docs)} documents to reset 'room_type_served'."
         except Exception as e:
             return f"Error resetting 'room_type_served': {str(e)}"
+
+    def reset_image_served(self, image_id: str) -> str:
+        try:
+            # Reference the document by its image_id
+            doc_ref = self.db.collection("labels").document(image_id)
+
+            # Check if the document exists and meets the condition
+            doc = doc_ref.get()
+            if not doc.exists:
+                return "Document with the specified image_id does not exist."
+
+            data = doc.to_dict()
+            if not data.get("room_type_served", False):
+                return "Document does not need resetting (room_type_served is already False)."
+
+            # Update only the room_type_served field to False
+            doc_ref.update({"room_type_served": False})
+
+            return f"Successfully reset 'room_type_served' for image_id: {image_id}."
+        except Exception as e:
+            return (
+                f"Error resetting 'room_type_served' for image_id {image_id}: {str(e)}"
+            )

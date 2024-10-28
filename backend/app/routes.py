@@ -1,4 +1,5 @@
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, session
+import uuid
 from .firestore import FirestoreUtils
 
 main = Blueprint("main", __name__)
@@ -70,6 +71,13 @@ def start_session():
     - Session data should include image labeling status.
     """
     pass  # Implementation here
+
+
+@main.route("/get_session_id", methods=["GET"])
+def get_session_id():
+    if "user_id" not in session:
+        session["user_id"] = str(uuid.uuid4())  # Generate a unique ID
+    return jsonify({"session_id": session["user_id"]})
 
 
 @main.route("/update_label", methods=["POST"])
@@ -149,7 +157,7 @@ def skip_image():
             )
 
         firestore_utils = FirestoreUtils()
-        result = firestore_utils.reset_image_served(image_id)  # NOT IMPLEMENTED YET
+        result = firestore_utils.reset_image_served(image_id)
 
         if result:
             return jsonify(
