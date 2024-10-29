@@ -26,53 +26,6 @@ def get_image():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-@main.route(
-    "/start_session", methods=["POST"]
-)  # username and session_type should be the variables in the request
-def start_session():
-    # try:
-    #     # parse the request data
-    #     data = request.get_json()
-    #     username = data.get('username')
-    #     session_type = data.get('session_type')
-
-    #     if not username or not session_type:
-    #         return jsonify({"success": False, "message": "Missing username or session type"}), 400
-
-    #     firestore_utils = FirestoreUtils()
-
-    #     # create session data
-    #     session_data = {
-    #         "username": username,
-    #         "session_type": session_type,
-    #         "start_timestamp": firestore_utils.get_current_timestamp(),
-    #         "images_labeled": [],  # track which images have been labeled in this session
-    #         "session_score": 0  # start with a score of 0
-    #     }
-
-    #     # Store the session in Firestore
-    #     session_id = firestore_utils.create_session(session_data)
-
-    #     # Return the session ID to the client
-    #     return jsonify({"success": True, "session_id": session_id})
-
-    # except Exception as e:
-    #     # Handle any errors and return a 500 status code with the exception message
-    #     return jsonify({"success": False, "error": str(e)}), 500
-    """
-    Initialize a new user session with a username and session type (room labeling or score labeling).
-
-    Functionality:
-    - Store session information in Firestore, including `username`, `session type`,
-    and the timestamp when the session starts.
-    - Track which images have been labeled in the session based on the `image_path` or ID.
-
-    Notes:
-    - Session data should include image labeling status.
-    """
-    pass  # Implementation here
-
-
 @main.route("/get_session_id", methods=["GET"])
 def get_session_id():
     if "user_id" not in session:
@@ -129,18 +82,6 @@ def reset_image_served():
     to prevent stale images.
     """
     pass
-
-
-@main.route("/get_leaderboard", methods=["GET"])
-def get_leaderboard():
-    """
-    Retrieve a leaderboard of user session scores, sorted by the number of labeled images.
-
-    Functionality:
-    - Query Firestore for all user sessions and their scores.
-    - Return a sorted list of users with the highest labeling scores.
-    """
-    pass  # Implementation here
 
 
 @main.route("/skip_image", methods=["POST"])
