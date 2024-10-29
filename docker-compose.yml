@@ -1,0 +1,18 @@
+services:
+  app:
+    image: gcr.io/real-estate-labeler/image-labeler-flask
+    container_name: image-labeler-flask
+    build:
+      context: .
+      dockerfile: Dockerfile # Ensure this matches your Dockerfile name
+    environment:
+      FLASK_SECRET_KEY: "d9cbc4e5b7a6d7387047435955f0260c0981160f112e1078"
+      APP_ENV: "local"
+      GOOGLE_APPLICATION_CREDENTIALS: "/var/secrets/gcp-service-account.json"
+      GOOGLE_CLOUD_PROJECT_ID: "real-estate-labeler"
+      FIRESTORE_COLLECTION_NAME: "labels"
+      FIREBASE_STORAGE_BUCKET: "real-estate-labeler.appspot.com"
+    volumes:
+      - ./secrets/gcp-service-account.json:/var/secrets/gcp-service-account.json:ro
+    ports:
+      - "8080:8080"
