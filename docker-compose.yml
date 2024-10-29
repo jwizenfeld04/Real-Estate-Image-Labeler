@@ -1,14 +1,14 @@
 services:
   app:
-    image: gcr.io/real-estate-labeler/image-labeler-flask
-    container_name: image-labeler-flask
+    image: gcr.io/${PROJECT_ID}/${IMAGE_NAME}
+    container_name: ${SERVICE_NAME}
     build:
       context: .
       dockerfile: Dockerfile # Ensure this matches your Dockerfile name
     environment:
       FLASK_SECRET_KEY: "${FLASK_SECRET_KEY}"
       APP_ENV: "${APP_ENV:-local}"
-      GOOGLE_APPLICATION_CREDENTIALS: "/var/secrets/gcp-service-account.json"
+      GOOGLE_APPLICATION_CREDENTIALS: "${SECRET_PATH}"
       GOOGLE_CLOUD_PROJECT_ID: "${GOOGLE_CLOUD_PROJECT_ID}"
       FIRESTORE_COLLECTION_NAME: "${FIRESTORE_COLLECTION_NAME}"
       FIREBASE_STORAGE_BUCKET: "${FIREBASE_STORAGE_BUCKET}"
