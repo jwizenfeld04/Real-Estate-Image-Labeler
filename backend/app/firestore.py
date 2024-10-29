@@ -11,12 +11,13 @@ class FirestoreUtils:
         self.db = firestore.Client()
         self.stg = storage.Client()
         self.bucket_name = os.environ.get("FIREBASE_STORAGE_BUCKET")
+        self.firestore_collection_name = os.environ.get("FIRESTORE_COLLECTION_NAME")
         self.storage_prefix = "images/columbus-sold"
 
     def get_random_unlabeled_image(
         self, is_score: bool = False
     ) -> Optional[Dict[str, str]]:
-        collection_ref = self.db.collection("labels")
+        collection_ref = self.db.collection(self.firestore_collection_name)
 
         if is_score:
             query = collection_ref.where(
@@ -54,7 +55,9 @@ class FirestoreUtils:
         return {"id": selected_image_id, "url": url}
 
     def label_room_type(self, image_path: str, room_type: str, user_id: str) -> str:
-        doc_ref = self.db.collection("labels").document(image_path)
+        doc_ref = self.db.collection(self.firestore_collection_name).document(
+            image_path
+        )
 
         try:
             doc = doc_ref.get()
@@ -82,7 +85,9 @@ class FirestoreUtils:
     def label_score(
         self, image_path: str, score: int, other_labels: Dict[str, Any], user_id: str
     ) -> str:
-        doc_ref = self.db.collection("labels").document(image_path)
+        doc_ref = self.db.collection(self.firestore_collection_name).document(
+            image_path
+        )
 
         try:
             doc = doc_ref.get()
@@ -135,7 +140,7 @@ class FirestoreUtils:
         try:
             # Query for all documents where room_type_served is True and room_type_labeled is False
             query = (
-                self.db.collection("labels")
+                self.db.collection(self.firestore_collection_name)
                 .where(filter=firestore.FieldFilter("room_type_served", "==", True))
                 .where(filter=firestore.FieldFilter("room_type_labeled", "==", False))
             )
@@ -158,7 +163,9 @@ class FirestoreUtils:
     def reset_image_served(self, image_id: str) -> str:
         try:
             # Reference the document by its image_id
-            doc_ref = self.db.collection("labels").document(image_id)
+            doc_ref = self.db.collection(self.firestore_collection_name).document(
+                image_id
+            )
 
             # Check if the document exists and meets the condition
             doc = doc_ref.get()

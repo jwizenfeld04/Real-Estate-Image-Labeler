@@ -30,3 +30,8 @@ tests/
 # Ignore unnecessary cache and temporary files
 *.log
 *.tmp
+
+*.DS_STORE
+*.jpg
+*.jpeg
+*.csv
