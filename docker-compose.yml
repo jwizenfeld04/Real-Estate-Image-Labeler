@@ -6,12 +6,12 @@ services:
       context: .
       dockerfile: Dockerfile # Ensure this matches your Dockerfile name
     environment:
-      FLASK_SECRET_KEY: "d9cbc4e5b7a6d7387047435955f0260c0981160f112e1078"
-      APP_ENV: "local"
+      FLASK_SECRET_KEY: "${FLASK_SECRET_KEY}"
+      APP_ENV: "${APP_ENV:-local}"
       GOOGLE_APPLICATION_CREDENTIALS: "/var/secrets/gcp-service-account.json"
-      GOOGLE_CLOUD_PROJECT_ID: "real-estate-labeler"
-      FIRESTORE_COLLECTION_NAME: "labels"
-      FIREBASE_STORAGE_BUCKET: "real-estate-labeler.appspot.com"
+      GOOGLE_CLOUD_PROJECT_ID: "${GOOGLE_CLOUD_PROJECT_ID}"
+      FIRESTORE_COLLECTION_NAME: "${FIRESTORE_COLLECTION_NAME}"
+      FIREBASE_STORAGE_BUCKET: "${FIREBASE_STORAGE_BUCKET}"
     volumes:
       - ./secrets/gcp-service-account.json:/var/secrets/gcp-service-account.json:ro
     ports:
