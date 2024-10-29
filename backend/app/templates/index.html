@@ -110,7 +110,7 @@
             id="image"
             src=""
             alt="Image will appear here"
-            class="w-full h-full object-cover rounded-lg shadow-lg"
+            class="w-full h-full object-cover rounded-lg shadow-lg max-h-96"
           />
         </div>
 
@@ -217,11 +217,13 @@
         }
       }
 
-      async function fetchImage() {
+      async function fetchImage(showNoImagesMessage = true) {
         try {
           const response = await axios.get("/get_image");
           if (response.status === 404) {
-            displayNoImagesMessage();
+            if (showNoImagesMessage) {
+              displayNoImagesMessage();
+            }
             return;
           }
           if (response.data.success && response.data.image) {
@@ -231,13 +233,15 @@
             document.getElementById("labelContainer").classList.remove("hidden");
             document.getElementById("image").src = imageData.url;
 
-            // Log when an image is served
+            document.getElementById("skipImage").classList.remove("hidden");
+            document.getElementById("noImagesMessage").classList.add("hidden");
+
             console.log(`Image served with ID: ${imageId}`);
-          } else {
+          } else if (showNoImagesMessage) {
             displayNoImagesMessage();
           }
         } catch (error) {
-          if (error.response && error.response.status === 404) {
+          if (error.response && error.response.status === 404 && showNoImagesMessage) {
             displayNoImagesMessage();
           } else {
             handleError("Error fetching image", error);
@@ -270,8 +274,8 @@
             session_id: currentSessionId,
           });
           if (response.data.success) {
-            console.log(`Image with ID: ${imageId} was skipped`); // Log skipping action
-            await fetchImage();
+            console.log(`Image with ID: ${imageId} was skipped`);
+            await fetchImage(false); // Retry without showing "No Images Left" message
           } else {
             throw new Error(response.data.message);
           }
