@@ -83,7 +83,7 @@ class FirestoreUtils:
             return f"Error updating room type: {str(e)}"
 
     def label_score(
-        self, image_path: str, score: int, other_labels: Dict[str, Any], user_id: str
+        self, image_path: str, score: int, user_id: str
     ) -> str:
         doc_ref = self.db.collection(self.firestore_collection_name).document(
             image_path
@@ -108,7 +108,6 @@ class FirestoreUtils:
                 {
                     "scores": scores,
                     "average_score": average_score,
-                    "other_labels": firestore.ArrayUnion([other_labels]),
                     "total_label_count": firestore.Increment(1),
                     "score_labeled_user_ids": firestore.ArrayUnion([user_id]),
                     "score_served": firestore.Increment(1),

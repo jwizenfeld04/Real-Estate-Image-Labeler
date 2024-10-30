@@ -4,12 +4,19 @@ from .firestore import FirestoreUtils
 
 main = Blueprint("main", __name__)
 
-
 @main.route("/")
 def home():
     return render_template("index.html")
 
+@main.route("/label")
+def label():
+    return render_template("labeling.html")
 
+@main.route("/score")
+def score():
+    return render_template("scoring.html")
+
+# Your existing routes remain the same
 @main.route("/get_image", methods=["GET"])
 def get_image():
     try:
@@ -25,13 +32,32 @@ def get_image():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-
 @main.route("/get_session_id", methods=["GET"])
 def get_session_id():
     if "user_id" not in session:
-        session["user_id"] = str(uuid.uuid4())  # Generate a unique ID
+        session["user_id"] = str(uuid.uuid4())
     return jsonify({"session_id": session["user_id"]})
 
+@main.route("/update_score", methods=["POST"])
+def update_score():
+    try:
+        data = request.get_json()
+        image_path = data.get("image_path")
+        score = data.get("score")
+        user_id = data.get("user_id")
+
+        firestore_utils = FirestoreUtils()
+
+        if score:
+            firestore_utils.label_score(image_path, score, user_id)
+            return jsonify({"success": True})
+        else:
+            return (
+                jsonify({"success": False, "message": "Score must be provided"}),
+                400,
+            )
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @main.route("/update_label", methods=["POST"])
 def update_label():
@@ -40,49 +66,19 @@ def update_label():
         image_path = data.get("image_path")
         label = data.get("label")
         user_id = data.get("user_id")
-        # session_id = data.get('session_id') figure out how to do this
 
         firestore_utils = FirestoreUtils()
 
         if label:
             firestore_utils.label_room_type(image_path, label, user_id)
             return jsonify({"success": True})
-        # update score if provided
-        # elif score:
-        #    result = firestore_utils.label_score(image_path, score, data.get('other_labels', {}), user_id)
         else:
             return (
-                jsonify(
-                    {"success": False, "message": "Room type or score must be provided"}
-                ),
+                jsonify({"success": False, "message": "Room type must be provided"}),
                 400,
             )
-
-        # if "successfully" in result:
-        #     # increment session score if successful
-        #     firestore_utils.increment_session_score(session_id)
-        #     return jsonify({"success": True, "message": result})
-        # else:
-        #     return jsonify({"success": False, "message": result}), 400
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
-
-
-@main.route("/reset_image_served", methods=["GET"])
-def reset_image_served():
-    """
-    Reset any images that have been served but not labeled after a defined time period (stale images).
-
-    Functionality:
-    - Query Firestore for images with `served = True` and `labeled = False`.
-    - Reset `served = False` for these images, allowing them to be re-served to new users.
-
-    Scheduler:
-    - This endpoint should run periodically using a cloud scheduler (e.g., Cloud Scheduler)
-    to prevent stale images.
-    """
-    pass
-
 
 @main.route("/skip_image", methods=["POST"])
 def skip_image():
