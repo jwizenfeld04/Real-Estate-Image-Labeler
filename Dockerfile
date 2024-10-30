@@ -12,6 +12,9 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+ARG INCLUDE_SECRETS=false
+COPY secrets/gcp-service-account.json /app/secrets/gcp-service-account.json
+
 # Copy the entire backend folder into the container
 COPY backend /app/backend
 
@@ -19,8 +22,6 @@ COPY backend /app/backend
 EXPOSE 8080
 
 # Conditional copy for local builds only
-ARG INCLUDE_SECRETS=false
-COPY secrets/gcp-service-account.json /app/secrets/gcp-service-account.json
 
 # Run the Flask app
 CMD ["python", "-m", "backend.app.main"]
