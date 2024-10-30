@@ -21,7 +21,7 @@ gcloud run deploy $SERVICE_NAME \
   --region $REGION \
   --allow-unauthenticated \
   --set-env-vars FLASK_SECRET_KEY="$FLASK_SECRET_KEY" \
-  --set-env-vars APP_ENV="$APP_ENV" \
+  --set-env-vars APP_ENV="production" \
   --set-env-vars GOOGLE_CLOUD_PROJECT_ID="$GOOGLE_CLOUD_PROJECT_ID" \
   --set-env-vars FIRESTORE_COLLECTION_NAME="$FIRESTORE_COLLECTION_NAME" \
   --set-env-vars FIREBASE_STORAGE_BUCKET="$FIREBASE_STORAGE_BUCKET" \
