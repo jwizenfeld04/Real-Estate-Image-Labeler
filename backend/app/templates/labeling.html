@@ -57,6 +57,7 @@
             <ul class="space-y-1 text-sm">
               <li>X - Other</li>
               <li>Space - Skip Image</li>
+              <li>Tab - Switch to Labeling</li>
             </ul>
           </div>
         </div>
@@ -162,6 +163,11 @@
             Submit Label
           </button>
         </div>
+        <button
+        onclick="window.location.href='/score'"
+        id="toggleMode" class="px-6 py-2 bg-purple-600 text-white font-semibold rounded-lg shadow-md hover:bg-purple-700 focus:outline-none transition duration-300 mt-4"
+            > Switch to Scoring
+        </button>
       </div>
     </div>
 
@@ -312,6 +318,10 @@
           event.preventDefault();
           skipImage();
           return;
+        }else if (key === 'tab') {
+          event.preventDefault(); 
+          window.location.href = '/score'; //just going directly... not working by calling .click() for some reason
+          return; 
         }
 
         const label = keyLabelMap[key];
