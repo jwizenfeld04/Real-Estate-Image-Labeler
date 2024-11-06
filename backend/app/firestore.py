@@ -83,39 +83,50 @@ class FirestoreUtils:
             return f"Error updating room type: {str(e)}"
 
     def label_score(
-        self, image_path: str, score: int, user_id: str
-    ) -> str:
-        doc_ref = self.db.collection(self.firestore_collection_name).document(
-            image_path
-        )
+    self, image_path: str, score: int, user_id: str
+) -> str:
+        doc_ref = self.db.collection(self.firestore_collection_name).document(image_path)
 
         try:
+            # Retrieve the document data
             doc = doc_ref.get()
-            if not doc.exists():
+            if not doc.exists:
                 return "Image document not found."
 
+            # Get existing data from the document
             doc_data = doc.to_dict()
-            if doc_data.get("total_label_count", 0) >= 10 or user_id in doc_data.get(
-                "score_labeled_user_ids", []
-            ):
+
+            # Check if the maximum label count is reached or if the user already labeled this image
+            total_label_count = doc_data.get("total_label_count", 0)
+            score_labeled_user_ids = doc_data.get("score_labeled_user_ids", [])
+            
+            if total_label_count >= 10 or user_id in score_labeled_user_ids:
                 return "You have already labeled this image."
 
+            # Update the scores list and calculate the new average
             scores = doc_data.get("scores", [])
             scores.append(score)
             average_score = sum(scores) / len(scores)
 
-            doc_ref.update(
-                {
-                    "scores": scores,
-                    "average_score": average_score,
-                    "total_label_count": firestore.Increment(1),
-                    "score_labeled_user_ids": firestore.ArrayUnion([user_id]),
-                    "score_served": firestore.Increment(1),
-                }
-            )
+            # Manually increment the total_label_count and score_served, and add user_id if not present
+            total_label_count += 1
+            score_served = doc_data.get("score_served", 0) + 1
+            if user_id not in score_labeled_user_ids:
+                score_labeled_user_ids.append(user_id)
+
+            # Update the document with the new data
+            doc_ref.update({
+                "scores": scores,
+                "average_score": average_score,
+                "total_label_count": total_label_count,
+                "score_labeled_user_ids": score_labeled_user_ids,
+                "score_served_count": score_served,
+            })
+
             return f"Score of {score} added for image '{image_path}' successfully."
         except Exception as e:
             return f"Error updating score: {str(e)}"
+
 
     def get_image_id_from_path(self, image_path: str) -> str:
         image_id_parts = image_path.split("/")

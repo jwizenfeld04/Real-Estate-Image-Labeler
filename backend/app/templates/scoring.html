@@ -5,75 +5,71 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quality Rating</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body class="bg-gray-100 text-gray-800">
 <div class="flex flex-col lg:flex-row min-h-screen">
-<!-- Sidebar with scoring guidelines -->
-<div class="hidden lg:block w-64 bg-gray-800 text-white p-6 overflow-y-auto">
-    <h2 class="text-xl font-bold mb-4">Property Scoring Guidelines</h2>
-    
-    <div class="space-y-4">
-        <div>
-            <h3 class="text-sm font-semibold text-gray-400 mb-2">Score: 8-9 - Luxury</h3>
-            <ul class="text-sm space-y-1">
-                <li>• High-end finishes</li>
-                <li>• Premium materials</li>
-                <li>• Custom features</li>
-                <li>• Excellent condition</li>
-                <li>• Modern amenities</li>
-            </ul>
-        </div>
-
-        <div>
-            <h3 class="text-sm font-semibold text-gray-400 mb-2">Score: 6-7 - Above Average</h3>
-            <ul class="text-sm space-y-1">
-                <li>• Updated features</li>
-                <li>• Good materials</li>
-                <li>• Well maintained</li>
-                <li>• Some premium touches</li>
-            </ul>
-        </div>
-
-        <div>
-            <h3 class="text-sm font-semibold text-gray-400 mb-2">Score: 4-5 - Average</h3>
-            <ul class="text-sm space-y-1">
-                <li>• Standard features</li>
-                <li>• Regular maintenance</li>
-                <li>• Functional layout</li>
-                <li>• Basic amenities</li>
-            </ul>
-        </div>
-
-        <div>
-            <h3 class="text-sm font-semibold text-gray-400 mb-2">Score: 2-3 - Below Average</h3>
-            <ul class="text-sm space-y-1">
-                <li>• Outdated features</li>
-                <li>• Needs maintenance</li>
-                <li>• Wear and tear visible</li>
-                <li>• Basic functionality</li>
-            </ul>
-        </div>
-
-        <div>
-            <h3 class="text-sm font-semibold text-gray-400 mb-2">Score: 1 - Poor Condition</h3>
-            <ul class="text-sm space-y-1">
-                <li>• Major updates needed</li>
-                <li>• Significant wear</li>
-                <li>• Possible structural issues</li>
-                <li>• Outdated throughout</li>
-            </ul>
-        </div>
-
-        <div class="pt-2 border-t border-gray-700">
-            <p class="text-sm">Keyboard Shortcuts:</p>
-            <ul class="text-sm space-y-1">
-                <li>• 1-9: Quick score</li>
-                <li>• Space: Skip image</li>
-                <li>• Tab: Switch to labeling</li>
-            </ul>
+    <div class="hidden lg:block w-64 bg-gray-800 text-white p-6 overflow-y-auto">
+        <h2 class="text-xl font-bold mb-4">Property Scoring Guidelines</h2>
+        
+        <div class="space-y-4">
+            <!-- Luxury Tier -->
+            <div>
+                <h3 class="text-sm font-semibold text-gray-400 mb-2">Score: 8-9 - Luxury</h3>
+                <ul class="text-sm space-y-1">
+                    <li>• Top-tier, fancy finishes</li>
+                    <li>• Perfect condition</li>
+                    <li>• High-tech, modern everything</li>
+                </ul>
+            </div>
+            <!-- Above Average Tier -->
+            <div>
+                <h3 class="text-sm font-semibold text-gray-400 mb-2">Score: 6-7 - Above Average</h3>
+                <ul class="text-sm space-y-1">
+                    <li>• Good quality</li>
+                    <li>• Nice finishes</li>
+                    <li>• No major issues</li>
+                </ul>
+            </div>
+            <!-- Average Tier -->
+            <div>
+                <h3 class="text-sm font-semibold text-gray-400 mb-2">Score: 4-5 - Average</h3>
+                <ul class="text-sm space-y-1">
+                    <li>• Basic features</li>
+                    <li>• Okay condition</li>
+                    <li>• Nothing special</li>
+                </ul>
+            </div>
+            <!-- Below Average Tier -->
+            <div>
+                <h3 class="text-sm font-semibold text-gray-400 mb-2">Score: 2-3 - Below Average</h3>
+                <ul class="text-sm space-y-1">
+                    <li>• Outdated</li>
+                    <li>• Needs repairs</li>
+                    <li>• Worn out</li>
+                </ul>
+            </div>
+            <!-- Poor Condition Tier -->
+            <div>
+                <h3 class="text-sm font-semibold text-gray-400 mb-2">Score: 1 - Poor</h3>
+                <ul class="text-sm space-y-1">
+                    <li>• Major repairs needed</li>
+                    <li>• Lots of damage</li>
+                    <li>• Old and broken</li>
+                </ul>
+            </div>
+            <!-- Keyboard Shortcuts -->
+            <div class="pt-2 border-t border-gray-700">
+                <p class="text-sm">Keyboard Shortcuts:</p>
+                <ul class="text-sm space-y-1">
+                    <li>• 1-9: Quick score</li>
+                    <li>• Space: Skip image</li>
+                    <li>• Tab: Switch to labeling</li>
+                </ul>
+            </div>
         </div>
     </div>
-</div>
+    
 
     <!-- Main content -->
     <div class="flex-1 flex flex-col items-center justify-center py-10 px-4">
@@ -129,136 +125,120 @@
                 <button class="score-button px-6 py-3 rounded-lg bg-green-600 hover:bg-green-600 text-white transition-colors" data-score="6">6</button>
                 <button class="score-button px-6 py-3 rounded-lg bg-blue-600 hover:bg-teal-600 text-white transition-colors" data-score="7">7</button>
                 <button class="score-button px-6 py-3 rounded-lg bg-blue-800 hover:bg-blue-600 text-white transition-colors" data-score="8">8</button>
-                <button class="score-button px-6 py-3 rounded-lg bg-indigo-800 hover:bg-indigo-700 text-white transition-colors" data-score="9">9</button>                           
+                <button class="score-button px-6 py-3 rounded-lg bg-indigo-800 hover:bg-indigo-700 text-white transition-colors" data-score="9">9</button>    
             </div>
         </div>
     </div>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     let currentImagePath = '';
+    let imageId = "";
     let userId = null;
 
-    // Initialize session
-    fetch('/get_session_id')
-        .then(response => response.json())
-        .then(data => {
-            userId = data.session_id;
-            loadNewImage(),
-            console.log("Session started succesfully")
-        });
-
-    // Load new image
-    function loadNewImage() {
-        fetch('/get_image')
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    currentImagePath = data.image.path;
-                    imageId = data.image.id;
-                    document.getElementById('image').src = data.image.url;
-                    document.getElementById('loadingState').classList.add('hidden');
-                    document.getElementById('image').classList.remove('hidden');
-                    document.getElementById('scoringContainer').classList.remove('hidden');
-                    console.log(`Image served with ID: ${imageId}`);
-                } else {
-                    document.getElementById('noImagesMessage').classList.remove('hidden');
-                    console.log("Failed loading image");
-                }
-            })
-            .catch(error => showError('Failed to load image'));
+    async function initializeSession() {
+        try {
+            const response = await axios.get('/get_session_id');
+            userId = response.data.session_id;
+            await loadNewImage();
+            console.log("Session started successfully");
+        } catch (error) {
+            showError("Failed to initialize session");
+        }
     }
 
-    // Score buttons event listeners
-    document.querySelectorAll('.score-button').forEach(button => {
-        button.addEventListener('click', function() {
-            const score = parseInt(this.dataset.score);
-            submitScore(score);
-            console.log(`Image score given: ${score}`);
-        });
-    });
+    async function loadNewImage() {
+        try {
+            const response = await axios.get('/get_image');
+            if (response.data.success) {
+                currentImagePath = response.data.image.path;
+                imageId = response.data.image.id;
+                document.getElementById('image').src = response.data.image.url;
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('image').classList.remove('hidden');
+                document.getElementById('scoringContainer').classList.remove('hidden');
+                console.log(`Image served with ID: ${imageId}`);
+            } else {
+                document.getElementById('noImagesMessage').classList.remove('hidden');
+                console.log("Failed to load image");
+            }
+        } catch (error) {
+            showError('Failed to load image');
+        }
+    }
 
-    // Submit score
-    function submitScore(score) {
-        fetch('/update_score', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                image_path: currentImagePath,
+    async function submitScore(score) {
+        try {
+            const response = await axios.post('/update_score', {
+                image_path: imageId,
                 score: score,
                 user_id: userId
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                loadNewImage();
+            });
+            if (response.data.success) {
+                await loadNewImage();
+                console.log(`Image scored: ${score}`);
             } else {
                 showError('Failed to submit score');
-                console.log(`Failed to submit score`);
             }
-        })
-        .catch(error => showError('Error submitting score'));
+        } catch (error) {
+            showError('Error submitting score');
+        }
     }
 
-    // Skip button
-    document.getElementById('skipButton').addEventListener('click', function() {
-        fetch('/skip_image', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
+    async function skipImage() {
+        try {
+            const response = await axios.post('/skip_image', {
                 image_id: imageId,
                 session_id: userId
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                console.log("Image skipped succesfully"),
-                loadNewImage();
-            }else{
-                console.log("Failed to skip image");
+            });
+            if (response.data.success) {
+                console.log("Image skipped successfully");
+                await loadNewImage();
+            } else {
+                showError("Failed to skip image");
             }
-        })
-        .catch(error => showError('Failed to skip image'));
-    });
-
-    // Toggle mode button
-    document.getElementById('toggleMode').addEventListener('click', function() {
-        window.location.href = '/label';
-    });
-
-    // Keyboard shortcuts
-    document.addEventListener('keydown', function(event) {
-        const key = event.key;
-        if (key >= '1' && key <= '9') {
-            submitScore(parseInt(key));
-        } else if (key === ' ') {
-            event.preventDefault();
-            document.getElementById('skipButton').click();
-        } else if (key === 'Tab') {
-            event.preventDefault();
-            document.getElementById('toggleMode').click();
+        } catch (error) {
+            showError('Failed to skip image');
         }
-    });
+    }
 
-    // Error handling
     function showError(message) {
         const errorContainer = document.getElementById('errorContainer');
         errorContainer.querySelector('.error-message').textContent = message;
         errorContainer.classList.remove('hidden');
     }
 
-    // Retry button
-    document.querySelector('.retry-button').addEventListener('click', function() {
+    // Event listeners for buttons
+    document.querySelectorAll('.score-button').forEach(button => {
+        button.addEventListener('click', () => submitScore(parseInt(button.dataset.score)));
+    });
+
+    document.getElementById('skipButton').addEventListener('click', skipImage);
+
+    document.getElementById('toggleMode').addEventListener('click', () => {
+        window.location.href = '/label';
+    });
+
+    document.querySelector('.retry-button').addEventListener('click', () => {
         document.getElementById('errorContainer').classList.add('hidden');
         loadNewImage();
     });
+
+    document.addEventListener('keydown', function(event) {
+        const key = event.key;
+        if (key >= '1' && key <= '9') {
+            submitScore(parseInt(key));
+        } else if (key === ' ') {
+            event.preventDefault();
+            skipImage();
+        } else if (key === 'Tab') {
+            event.preventDefault();
+            document.getElementById('toggleMode').click();
+        }
+    });
+
+    await initializeSession();
 });
 </script>
 </body>
